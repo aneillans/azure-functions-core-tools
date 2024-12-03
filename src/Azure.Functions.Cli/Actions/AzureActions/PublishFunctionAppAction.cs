@@ -573,31 +573,37 @@ namespace Azure.Functions.Cli.Actions.AzureActions
             else if (functionApp.IsLinux && functionApp.IsDynamic)
             {
                 // Consumption Linux
+                ColoredConsole.WriteLine(GetLogMessage(" Type: Linux - Consumption"));
                 shouldSyncTriggers = await HandleLinuxConsumptionPublish(functionApp, zipStreamFactory);
             }
             else if (functionApp.IsFlex)
             {
                 // Flex
+                ColoredConsole.WriteLine(GetLogMessage(" Type: Flex"));
                 shouldSyncTriggers = await HandleFlexConsumptionPublish(functionApp, zipStreamFactory);
             }
             else if (functionApp.IsLinux && functionApp.IsElasticPremium)
             {
                 // Elastic Premium Linux
+                ColoredConsole.WriteLine(GetLogMessage(" Type: Linux - Elastic Premium"));
                 shouldSyncTriggers = await HandleElasticPremiumLinuxPublish(functionApp, zipStreamFactory);
             }
             else if (isFunctionAppDedicatedLinux)
             {
                 // Dedicated Linux
+                ColoredConsole.WriteLine(GetLogMessage(" Type: Linux - Dedicated"));
                 shouldSyncTriggers = false;
                 await HandleLinuxDedicatedPublish(functionApp, zipStreamFactory);
             }
             else if (!functionApp.IsLinux && PublishBuildOption == BuildOption.Remote)
             {
+                ColoredConsole.WriteLine(GetLogMessage(" Type: Windows - Remote Build"));
                 await HandleWindowsRemoteBuildPublish(functionApp, zipStreamFactory);
             }
             else if (RunFromPackageDeploy)
             {
                 // Windows default
+                ColoredConsole.WriteLine(GetLogMessage(" Type: Windows - Run from Package"));
                 await PublishRunFromPackageLocal(functionApp, zipStreamFactory);
             }
             else
@@ -648,7 +654,11 @@ namespace Azure.Functions.Cli.Actions.AzureActions
                 ColoredConsole.WriteLine(GetLogMessage("Syncing triggers..."));
                 HttpResponseMessage response = null;
                 // This SyncTriggers function calls the endpoint for linux syncTriggers
-                response = await AzureHelper.SyncTriggers(functionApp, AccessToken, ManagementURL);
+                if (string.IsNullOrEmpty(SyncAccessToken))
+                {
+                    SyncAccessToken = AccessToken;
+                }
+                response = await AzureHelper.SyncTriggers(functionApp, SyncAccessToken, ManagementURL);
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorMessage = $"Error calling sync triggers ({response.StatusCode}). ";
